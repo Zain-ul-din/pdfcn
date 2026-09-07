@@ -1,9 +1,12 @@
 "use client";
 
+import { DownloadIcon } from "lucide-react";
 import { createElement, useEffect, useRef, useState } from "react";
 import takumiWasmUrl from "takumi-pdf/wasm-url";
 
+import { Button } from "@/components/ui/button";
 import { replacePreviewImageSources } from "@/examples/preview-assets";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   getPreviewFonts,
   getPreviewFontUrls,
@@ -97,6 +100,7 @@ export const PdfPreview = ({
 }: PdfPreviewProps) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -233,7 +237,23 @@ export const PdfPreview = ({
           Rendering PDF…
         </div>
       ) : null}
-      {pdfUrl ? (
+      {pdfUrl && isMobile ? (
+        <div
+          className="flex flex-col items-center justify-center gap-4 bg-muted/10 p-6"
+          style={{ minHeight: height }}
+        >
+          <p className="text-sm text-muted-foreground text-center">
+            PDF preview is optimized for larger screens.
+          </p>
+          <Button asChild>
+            <a href={pdfUrl} download={`${name}.pdf`}>
+              <DownloadIcon />
+              Download PDF
+            </a>
+          </Button>
+        </div>
+      ) : null}
+      {pdfUrl && !isMobile ? (
         <iframe
           className="block w-full bg-background"
           src={`${pdfUrl}#toolbar=1&navpanes=0`}
