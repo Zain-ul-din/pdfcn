@@ -1,14 +1,8 @@
-import { Children, cloneElement, isValidElement } from "react";
+import { Children, cloneElement, Fragment, isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import {
-  usePdfcnTheme,
-  useSafeMemo,
-} from "@/registry/bases/takumi/components/theme-provider";
-import {
-  View,
-  Text as PDFText,
-} from "@/registry/bases/takumi/lib/pdf-primitives";
+import { usePdfcnTheme, useSafeMemo } from "@/registry/bases/takumi/components/theme-provider";
+import { View, Text as PDFText } from "@/registry/bases/takumi/lib/pdf-primitives";
 import type { Style } from "@/registry/bases/takumi/lib/pdf-primitives";
 
 import { createTableStyles } from "./table.styles";
@@ -45,9 +39,7 @@ export const TableCell = ({
   const theme = usePdfcnTheme();
   const styles = useSafeMemo(() => createTableStyles(theme), [theme]);
   const cellStyles: Style[] =
-    width === undefined
-      ? [styles.cell]
-      : [styles.cellFixed, { width } as Style];
+    width === undefined ? [styles.cell] : [styles.cellFixed, { width } as Style];
 
   const cellVariantStyle = (
     {
@@ -93,13 +85,7 @@ export const TableCell = ({
 
   const content =
     typeof children === "string" ? (
-      <PDFText
-        style={[
-          textStyle,
-          align ? { textAlign: align } : {},
-          { margin: 0, padding: 0 },
-        ]}
-      >
+      <PDFText style={[textStyle, align ? { textAlign: align } : {}, { margin: 0, padding: 0 }]}>
         {children}
       </PDFText>
     ) : (
@@ -142,7 +128,7 @@ export const TableRow = ({
         minimal: styles.rowHeaderMinimal,
         "primary-header": styles.rowHeaderPrimaryHeader,
         striped: styles.rowHeaderStriped,
-      }[variant]
+      }[variant],
     );
   }
 
@@ -173,11 +159,7 @@ export const TableRow = ({
   });
 
   return (
-    <View
-      style={[{ breakInside: "avoid" as const }, styleArray]
-        .flat()
-        .filter(Boolean)}
-    >
+    <View style={[{ breakInside: "avoid" as const }, styleArray].flat().filter(Boolean)}>
       {processedChildren}
     </View>
   );
@@ -186,7 +168,7 @@ export const TableRow = ({
 const processTableChildren = (
   children: ReactNode,
   variant: TableVariant,
-  zebraStripe: boolean
+  zebraStripe: boolean,
 ): ReactNode => {
   let bodyRowIndex = 0;
 
@@ -195,35 +177,46 @@ const processTableChildren = (
       return child;
     }
 
-    if (
-      child.type === TableHeader ||
-      child.type === TableBody ||
-      child.type === TableFooter
-    ) {
+    if (child.type === TableHeader || child.type === TableBody || child.type === TableFooter) {
       const isBody = child.type === TableBody;
       const sectionChild = child as ReactElement<TableSectionProps>;
-      const sectionChildren = Children.map(
-        sectionChild.props.children,
-        (rowChild) => {
-          if (isValidElement(rowChild) && rowChild.type === TableRow) {
-            const rowProps: Partial<TableRowProps> = { variant };
-
-            if (isBody && zebraStripe) {
-              const isStripe = bodyRowIndex % 2 === 1;
-              bodyRowIndex += 1;
-              if (isStripe) {
-                rowProps.stripe = true;
-              }
-            }
-
-            return cloneElement(
-              rowChild as ReactElement<TableRowProps>,
-              rowProps
-            );
+      const sectionChildren = Children.map(sectionChild.props.children, (rowChild) => {
+        if (isValidElement(rowChild) && rowChild.type === Fragment) {
+          const fragment = rowChild as ReactElement<HTMLElement>;
+          let isStripe = false;
+          if (isBody && zebraStripe) {
+            isStripe = bodyRowIndex % 2 === 1;
+            bodyRowIndex += 1;
           }
-          return rowChild;
+
+          return cloneElement(
+            rowChild,
+            {},
+            Children.map(fragment.props.children, (fragmentChild) => {
+              if (isValidElement(fragmentChild) && fragmentChild.type === TableRow) {
+                const rowProps: Partial<TableRowProps> = { variant };
+                if (isStripe) rowProps.stripe = true;
+                return cloneElement(fragmentChild, rowProps);
+              }
+            }),
+          );
         }
-      );
+
+        if (isValidElement(rowChild) && rowChild.type === TableRow) {
+          const rowProps: Partial<TableRowProps> = { variant };
+
+          if (isBody && zebraStripe) {
+            const isStripe = bodyRowIndex % 2 === 1;
+            bodyRowIndex += 1;
+            if (isStripe) {
+              rowProps.stripe = true;
+            }
+          }
+
+          return cloneElement(rowChild as ReactElement<TableRowProps>, rowProps);
+        }
+        return rowChild;
+      });
 
       return cloneElement(child, {}, sectionChildren);
     }
@@ -257,21 +250,15 @@ export const Table = ({
       minimal: styles.tableMinimal,
       "primary-header": styles.tablePrimaryHeader,
       striped: styles.tableStriped,
-    }[variant]
+    }[variant],
   );
 
   const styleArray = style ? [...tableStyles, style] : tableStyles;
-  const processedChildren = processTableChildren(
-    children,
-    variant,
-    effectiveZebra
-  );
+  const processedChildren = processTableChildren(children, variant, effectiveZebra);
 
   const inner = <View style={styleArray}>{processedChildren}</View>;
   return noWrap ? (
-    <View style={[{ breakInside: "avoid" as const }].filter(Boolean)}>
-      {inner}
-    </View>
+    <View style={[{ breakInside: "avoid" as const }].filter(Boolean)}>{inner}</View>
   ) : (
     inner
   );

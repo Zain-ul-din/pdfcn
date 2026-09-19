@@ -8,10 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/registry/bases/forme/components/table/table";
-import {
-  usePdfcnTheme,
-  useSafeMemo,
-} from "@/registry/bases/forme/components/theme-provider";
+import { usePdfcnTheme, useSafeMemo } from "@/registry/bases/forme/components/theme-provider";
 import { Text as PDFText } from "@/registry/bases/forme/lib/pdf-primitives";
 import type { Style } from "@/registry/bases/forme/lib/pdf-primitives";
 
@@ -84,9 +81,7 @@ export const DataTable = <T extends Record<string, unknown>>({
                             style={
                               [
                                 compact.text,
-                                col.align
-                                  ? ({ textAlign: col.align } as Style)
-                                  : {},
+                                col.align ? ({ textAlign: col.align } as Style) : {},
                               ] as never
                             }
                           >
@@ -106,9 +101,7 @@ export const DataTable = <T extends Record<string, unknown>>({
           <TableRow footer>
             {columns.map((col) => {
               const value = col.key in footer ? footer[col.key] : "";
-              const rendered = col.renderFooter
-                ? col.renderFooter(value)
-                : null;
+              const rendered = col.renderFooter ? col.renderFooter(value) : null;
               const text = rendered === null ? formatValue(value) : null;
               return (
                 <TableCell
@@ -124,9 +117,7 @@ export const DataTable = <T extends Record<string, unknown>>({
                           style={
                             [
                               value ? compact.footerText : compact.text,
-                              col.align
-                                ? ({ textAlign: col.align } as Style)
-                                : {},
+                              col.align ? ({ textAlign: col.align } as Style) : {},
                             ] as never
                           }
                         >

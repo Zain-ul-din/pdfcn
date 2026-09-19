@@ -1,3 +1,4 @@
+import { Fragment, ReactNode } from "react";
 import {
   Table,
   TableBody,
@@ -6,11 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/registry/bases/takumi/components/table/table";
-import {
-  usePdfcnTheme,
-  useSafeMemo,
-} from "@/registry/bases/takumi/components/theme-provider";
-import { Text as PDFText } from "@/registry/bases/takumi/lib/pdf-primitives";
+import { usePdfcnTheme, useSafeMemo } from "@/registry/bases/takumi/components/theme-provider";
+import { Text as PDFText, View } from "@/registry/bases/takumi/lib/pdf-primitives";
 import type { Style } from "@/registry/bases/takumi/lib/pdf-primitives";
 
 import { createCompactStyles, formatValue } from "./data-table.styles";
@@ -44,10 +42,7 @@ export const DataTable = <T extends Record<string, unknown>>({
             >
               {isCompact ? (
                 <PDFText
-                  style={[
-                    compact.headerText,
-                    col.align ? ({ textAlign: col.align } as Style) : {},
-                  ]}
+                  style={[compact.headerText, col.align ? ({ textAlign: col.align } as Style) : {}]}
                 >
                   {col.header}
                 </PDFText>
@@ -60,7 +55,7 @@ export const DataTable = <T extends Record<string, unknown>>({
       </TableHeader>
       <TableBody>
         {data.map((row, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: DataTable has no row id; order is stable for static data
+          <Fragment key={i}>
             <TableRow key={i}>
               {columns.map((col) => {
                 const value = row[col.key];
@@ -78,9 +73,7 @@ export const DataTable = <T extends Record<string, unknown>>({
                           <PDFText
                             style={[
                               compact.text,
-                              col.align
-                                ? ({ textAlign: col.align } as Style)
-                                : {},
+                              col.align ? ({ textAlign: col.align } as Style) : {},
                             ]}
                           >
                             {text}
@@ -91,6 +84,22 @@ export const DataTable = <T extends Record<string, unknown>>({
                 );
               })}
             </TableRow>
+            {"_detail" in row && (
+              <TableRow
+                style={{
+                  padding: "1rem",
+                }}
+              >
+                <View
+                  style={{
+                    width: "100%",
+                  }}
+                >
+                  {row["_detail"] as ReactNode}
+                </View>
+              </TableRow>
+            )}
+          </Fragment>
         ))}
       </TableBody>
       {footer && (
@@ -98,9 +107,7 @@ export const DataTable = <T extends Record<string, unknown>>({
           <TableRow footer>
             {columns.map((col) => {
               const value = col.key in footer ? footer[col.key] : "";
-              const rendered = col.renderFooter
-                ? col.renderFooter(value)
-                : null;
+              const rendered = col.renderFooter ? col.renderFooter(value) : null;
               const text = rendered === null ? formatValue(value) : null;
               return (
                 <TableCell
@@ -115,9 +122,7 @@ export const DataTable = <T extends Record<string, unknown>>({
                         <PDFText
                           style={[
                             value ? compact.footerText : compact.text,
-                            col.align
-                              ? ({ textAlign: col.align } as Style)
-                              : {},
+                            col.align ? ({ textAlign: col.align } as Style) : {},
                           ]}
                         >
                           {text}
